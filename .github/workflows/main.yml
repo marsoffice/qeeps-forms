@@ -1,4 +1,4 @@
-name: qeeps-forms
+name: qeeps-forms-ci
 on:
   push:
     branches: [ develop, master ]
