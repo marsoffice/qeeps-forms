@@ -19,7 +19,7 @@ namespace MarsOffice.Qeeps.Forms
 
         [FunctionName("Test")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "test")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/forms/test")] HttpRequest req)
         {
             var testResponse = await _accessClient.GetFromJsonAsync<OrganisationDto>("/api/access/test");
             return new OkObjectResult(testResponse);
