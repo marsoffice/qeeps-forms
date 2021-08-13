@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Net.Http.Headers;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
