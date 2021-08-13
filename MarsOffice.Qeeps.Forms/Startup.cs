@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using Azure.Core;
-using Azure.Identity;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,32 +22,7 @@ namespace MarsOffice.Qeeps.Forms
         public override void Configure(IFunctionsHostBuilder builder)
         {
             var config = builder.GetContext().Configuration;
-            builder.Services.AddHttpClient("access", (svc, hc) =>
-            {
-                hc.BaseAddress = new Uri(config["access_url"]);
-                hc.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", new [] {$"Bearer {GetToken(config)}"});
-            });
-        }
-
-        private string GetToken(IConfiguration config)
-        {
-            TokenCredential tokenCredential;
-            var envVar = Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT");
-            var isDevelopmentEnvironment = string.IsNullOrEmpty(envVar) || envVar.ToLower() == "development";
-
-            if (isDevelopmentEnvironment)
-            {
-                tokenCredential = new AzureCliCredential();
-            }
-            else
-            {
-                tokenCredential = new DefaultAzureCredential();
-            }
-
-            return tokenCredential.GetToken(
-                new TokenRequestContext(scopes: new string[] { config["scope"] }),
-                cancellationToken: System.Threading.CancellationToken.None
-            ).Token;
+            builder.Services.AddMicroserviceClients(new [] {"access"}, config);
         }
     }
 }
