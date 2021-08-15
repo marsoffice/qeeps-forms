@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using System.Net.Http.Json;
 using MarsOffice.Qeeps.Access.Abstractions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace MarsOffice.Qeeps.Forms
 {
@@ -21,8 +22,11 @@ namespace MarsOffice.Qeeps.Forms
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/forms/test")] HttpRequest req)
         {
-            var testResponse = await _accessClient.GetFromJsonAsync<OrganisationDto>("/api/access/test");
-            return new OkObjectResult(testResponse);
+            var testResponse = await _accessClient.GetStringAsync("/api/access/test");
+            var dto = JsonConvert.DeserializeObject<OrganisationDto>(testResponse, new JsonSerializerSettings {
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            });
+            return new OkObjectResult(dto);
         }
     }
 }
