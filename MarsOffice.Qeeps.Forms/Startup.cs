@@ -3,6 +3,7 @@ using System.IO;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using FluentValidation;
 
 [assembly: FunctionsStartup(typeof(MarsOffice.Qeeps.Forms.Startup))]
 namespace MarsOffice.Qeeps.Forms
@@ -23,6 +24,7 @@ namespace MarsOffice.Qeeps.Forms
         {
             var config = builder.GetContext().Configuration;
             builder.Services.AddAutoMapper(typeof(Startup).Assembly);
+            builder.Services.AddValidatorsFromAssembly(typeof(Startup).Assembly);
             builder.Services.AddMicroserviceClients(new [] {"access"}, config);
         }
     }
