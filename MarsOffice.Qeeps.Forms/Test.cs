@@ -18,7 +18,13 @@ namespace MarsOffice.Qeeps.Forms
         [FunctionName("Test")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/forms/test")] HttpRequest req,
-            [ServiceBus("notifications", Connection = "sbconnectionstring")] IAsyncCollector<RequestNotificationDto> outputNotifications
+            [ServiceBus(
+                #if DEBUG
+                "notifications-dev",
+                #else
+                "notifications",
+                #endif
+                 Connection = "sbconnectionstring")] IAsyncCollector<RequestNotificationDto> outputNotifications
             )
         {
             var principal = QeepsPrincipal.Parse(req);
