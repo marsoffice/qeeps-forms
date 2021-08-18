@@ -29,11 +29,12 @@ namespace MarsOffice.Qeeps.Forms
         {
             var principal = QeepsPrincipal.Parse(req);
             await outputNotifications.AddAsync(new RequestNotificationDto {
+                Severity = Severity.Info,
                 AbsoluteRouteUrl = "/test",
                 AdditionalData = new System.Collections.Generic.Dictionary<string, string> {
                     {"hi", "alin"}
                 },
-                NotificationTypes = new [] {NotificationType.InApp, NotificationType.Email},
+                NotificationTypes = new [] {NotificationType.InApp},
                 PreferredLanguage = "en",
                 PlaceholderData = new System.Collections.Generic.Dictionary<string, string> {
                     {"link", "linkhere"},
