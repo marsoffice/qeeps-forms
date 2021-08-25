@@ -20,9 +20,6 @@ namespace MarsOffice.Qeeps.Forms.Validators
 
             RuleFor(x => x.UserId).NotEmpty().WithMessage("forms.formDto.userIdRequired");
 
-            RuleFor(x => x.Columns).NotNull().WithMessage("forms.formDto.columnsRequired")
-                .NotEmpty().WithMessage("forms.formDto.columnsRequired");
-
             RuleForEach(x => x.Columns).ChildRules(x => {
                 x.RuleFor(x => x.DropdownOptions).NotNull().WithMessage("forms.formDto.dropdownOptionsRequired")
                     .When(x => x.DataType == ColumnDataType.Dropdown)
