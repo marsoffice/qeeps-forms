@@ -16,6 +16,7 @@ namespace MarsOffice.Qeeps.Forms.Entities
         public IEnumerable<FileDto> Attachments { get; set; }
         public bool IsLocked { get; set; }
         public DateTime? LockedUntilDate { get; set; }
+        public bool RowAppendDisabled { get; set; }
         public bool IsRecurrent { get; set; }
         public string CronExpression { get; set; }
         public bool IsPinned { get; set; }
