@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 
-namespace MarsOffice.Qeeps.Forms.Entities
+namespace MarsOffice.Qeeps.Forms.Abstractions
 {
-    public class RowEntity
+    public class RowDto
     {
         public IEnumerable<string> Values { get; set; }
     }

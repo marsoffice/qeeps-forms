@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using MarsOffice.Qeeps.Files.Abstractions;
-using Newtonsoft.Json;
 
-namespace MarsOffice.Qeeps.Forms.Entities
+namespace MarsOffice.Qeeps.Forms.Abstractions
 {
-    public class FormEntity
+    public class FormDto
     {
-        [JsonProperty("id")]
         public string Id { get; set; }
         public string UserId { get; set; }
         public DateTime CreatedDate { get; set; }
@@ -22,7 +20,9 @@ namespace MarsOffice.Qeeps.Forms.Entities
         public bool IsPinned { get; set; }
         public DateTime? PinnedUntilDate { get; set; }
         public IEnumerable<string> Tags { get; set; }
-        public IEnumerable<ColumnEntity> Columns { get; set; }
-        public IEnumerable<RowEntity> Rows {get;set;}
+        public IEnumerable<ColumnDto> Columns { get; set; }
+        public IEnumerable<RowDto> Rows { get; set; }
+
+        public IEnumerable<FormAccessDto> FormAccesses { get; set; }
     }
 }
