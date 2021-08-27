@@ -147,8 +147,8 @@ jobs:
 
       - name: dotnet publish
         run: |
-            ./.sonar/scanner/dotnet-sonarscanner begin /k:"marsoffice_qeeps-files" /o:"marsoffice" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-            dotnet publish -c Release -o ./dist ./MarsOffice.Qeeps.Files
+            ./.sonar/scanner/dotnet-sonarscanner begin /k:"marsoffice_qeeps-forms" /o:"marsoffice" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+            dotnet publish -c Release -o ./dist ./MarsOffice.Qeeps.Forms
             ./.sonar/scanner/dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
         env:
           NUGET_AUTH_TOKEN: ${{ secrets.GH_TOKEN }}
