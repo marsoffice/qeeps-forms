@@ -10,5 +10,6 @@ namespace MarsOffice.Qeeps.Forms.Abstractions
         public bool IsFrozen { get; set; }
         public bool IsHidden { get; set; }
         public ColumnDataType DataType { get; set; }
+        public IEnumerable<string> AllowedExtensions { get; set; }
     }
 }
