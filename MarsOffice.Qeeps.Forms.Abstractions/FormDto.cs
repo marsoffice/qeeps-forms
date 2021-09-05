@@ -21,7 +21,7 @@ namespace MarsOffice.Qeeps.Forms.Abstractions
         public DateTime? PinnedUntilDate { get; set; }
         public IEnumerable<string> Tags { get; set; }
         public IEnumerable<ColumnDto> Columns { get; set; }
-        public IEnumerable<RowDto> Rows { get; set; }
+        public IEnumerable<IEnumerable<dynamic>> Rows { get; set; }
 
         public IEnumerable<FormAccessDto> FormAccesses { get; set; }
     }

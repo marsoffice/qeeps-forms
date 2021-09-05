@@ -23,6 +23,6 @@ namespace MarsOffice.Qeeps.Forms.Entities
         public DateTime? PinnedUntilDate { get; set; }
         public IEnumerable<string> Tags { get; set; }
         public IEnumerable<ColumnEntity> Columns { get; set; }
-        public IEnumerable<RowEntity> Rows {get;set;}
+        public IEnumerable<IEnumerable<dynamic>> Rows { get; set; }
     }
 }
