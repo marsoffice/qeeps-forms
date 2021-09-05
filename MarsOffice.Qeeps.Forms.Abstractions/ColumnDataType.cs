@@ -14,6 +14,7 @@ namespace MarsOffice.Qeeps.Forms.Abstractions
         DateTime = 9,
         Dropdown = 10,
         SingleFile = 11,
-        MultipleFiles = 12
+        MultipleFiles = 12,
+        Boolean = 13
     }
 }
