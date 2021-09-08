@@ -16,11 +16,11 @@ namespace MarsOffice.Qeeps.Forms
 {
     public class Forms
     {
-        private readonly IValidator<FormDto> _validator;
+        private readonly IValidator<CreateFormDto> _createFormDtoValidator;
 
-        public Forms(IValidator<FormDto> validator)
+        public Forms(IValidator<CreateFormDto> createFormDtoValidator)
         {
-            _validator = validator;
+            _createFormDtoValidator = createFormDtoValidator;
         }
 
         [FunctionName("CreateForm")]
@@ -36,11 +36,11 @@ namespace MarsOffice.Qeeps.Forms
                 {
                     json = await streamReader.ReadToEndAsync();
                 }
-                var payload = JsonConvert.DeserializeObject<FormDto>(json, new JsonSerializerSettings
+                var payload = JsonConvert.DeserializeObject<CreateFormDto>(json, new JsonSerializerSettings
                 {
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 });
-                await _validator.ValidateAndThrowAsync(payload);
+                await _createFormDtoValidator.ValidateAndThrowAsync(payload);
                 return null;
             }
             catch (Exception e)
