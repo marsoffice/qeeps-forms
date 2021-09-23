@@ -32,6 +32,7 @@ namespace MarsOffice.Qeeps.Forms.Validators
                             .NotEmpty().WithMessage("forms.createFormDto.dropdownOptionsRequired")
                             .When(x => x.DataType == ColumnDataType.Dropdown);
                         x.RuleFor(x => x.Name).NotEmpty().WithMessage("forms.createFormDto.columnNameRequired");
+                        x.RuleFor(x => x.Reference).NotEmpty().WithMessage("forms.createFormDto.columnReferenceRequired");
                     });
 
                     x.RuleFor(x => x.Rows).Must((f, list) => list.All(r => r.Count() == f.Columns.Count()))

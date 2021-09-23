@@ -12,5 +12,6 @@ namespace MarsOffice.Qeeps.Forms.Entities
         public bool IsHidden { get; set; }
         public ColumnDataType DataType { get; set; }
         public IEnumerable<string> AllowedExtensions { get; set; }
+        public string Reference { get; set; }
     }
 }
