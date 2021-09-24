@@ -1,4 +1,6 @@
+using System;
 using System.Linq;
+using Cronos;
 using FluentValidation;
 using MarsOffice.Qeeps.Forms.Abstractions;
 
@@ -15,6 +17,21 @@ namespace MarsOffice.Qeeps.Forms.Validators
                 .MinimumLength(6).WithMessage("forms.createFormDto.titleTooShort|chars:6");
 
                     x.RuleFor(x => x.CronExpression).NotEmpty().WithMessage("form.formDto.cronExpressionRequired")
+                        .Custom((x, ctx) =>
+                        {
+                            try
+                            {
+                                var cronExpression = CronExpression.Parse(x);
+                                if (!x.StartsWith("0 0 "))
+                                {
+                                    ctx.AddFailure("CronExpression", "forms.createFormDto.invalidCronExpression");
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                ctx.AddFailure("CronExpression", "forms.createFormDto.invalidCronExpression");
+                            }
+                        })
                         .When(x => x.IsRecurrent);
 
                     x.RuleForEach(x => x.Attachments).ChildRules(x =>

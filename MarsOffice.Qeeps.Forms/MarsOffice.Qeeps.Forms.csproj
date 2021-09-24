@@ -11,6 +11,8 @@
   </ItemGroup>
   <ItemGroup>
     
+    <PackageReference Include="Cronos" Version="0.7.1" />
+    
     <PackageReference Include="MarsOffice.Qeeps.Access.Abstractions" Version="1.0.0-dev.34" />
     <PackageReference Include="MarsOffice.Qeeps.Microfunction" Version="1.2.0-dev.13" />
     <PackageReference Include="MarsOffice.Qeeps.Notifications.Abstractions" Version="1.0.0-dev.11" />
