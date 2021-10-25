@@ -5,16 +5,12 @@ namespace MarsOffice.Qeeps.Forms.Abstractions
         StringSingleLine = 0,
         StringMultiLine = 1,
         Integer = 2,
-        PositiveInteger = 3,
-        Long = 4,
-        PositiveLong = 5,
-        Real = 6,
-        PositiveReal = 7,
-        Date = 8,
-        DateTime = 9,
-        Dropdown = 10,
-        SingleFile = 11,
-        MultipleFiles = 12,
-        Boolean = 13
+        Real = 3,
+        Date = 4,
+        DateTime = 5,
+        Dropdown = 6,
+        SingleFile = 7,
+        MultipleFiles = 8,
+        Boolean = 9
     }
 }
