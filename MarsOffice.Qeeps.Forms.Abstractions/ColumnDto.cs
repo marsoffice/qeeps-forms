@@ -12,8 +12,8 @@ namespace MarsOffice.Qeeps.Forms.Abstractions
         public ColumnDataType DataType { get; set; }
         public IEnumerable<string> AllowedExtensions { get; set; }
         public string Reference { get; set; }
-        public string Min { get; set; }
-        public string Max { get; set; }
+        public dynamic Min { get; set; }
+        public dynamic Max { get; set; }
         public int? MinLength { get; set; }
         public int MaxLength { get; set; }
     }
