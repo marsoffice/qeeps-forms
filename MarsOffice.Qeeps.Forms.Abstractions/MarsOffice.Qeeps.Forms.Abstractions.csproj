@@ -8,11 +8,11 @@
     <Company>marsoffice</Company>
     <PackageDescription>marsoffice</PackageDescription>
     <RepositoryUrl>https://github.com/marsoffice/qeeps-forms</RepositoryUrl>
- 
+
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MarsOffice.Qeeps.Files.Abstractions" Version="1.0.0-dev.4" />
+    <PackageReference Include="MarsOffice.Qeeps.Files.Abstractions" Version="1.0.0-dev.21" />
   </ItemGroup>
 
 </Project>
