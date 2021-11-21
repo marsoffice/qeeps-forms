@@ -37,7 +37,10 @@ namespace MarsOffice.Qeeps.Forms.Validators
                     x.RuleForEach(x => x.Attachments).ChildRules(x =>
                     {
                         x.RuleFor(x => x.Filename).NotEmpty().WithMessage("forms.createFormDto.attachmentFilenameRequired");
-                        x.RuleFor(x => x.Id).NotEmpty().WithMessage("forms.createFormDto.attachmentIdRequired");
+                        x.RuleFor(x => x.FileId).NotEmpty().WithMessage("forms.createFormDto.attachmentFileIdRequired");
+                        x.RuleFor(x => x.Location).NotEmpty().WithMessage("forms.createFormDto.attachmentLocationRequired");
+                        x.RuleFor(x => x.UploadSessionId).NotEmpty().WithMessage("forms.createFormDto.attachmentUploadSessionIdRequired");
+                        x.RuleFor(x => x.UserId).NotEmpty().WithMessage("forms.createFormDto.attachmentUserIdRequired");
                     });
 
                     x.RuleFor(x => x.UserId).NotEmpty().WithMessage("forms.createFormDto.userIdRequired");
