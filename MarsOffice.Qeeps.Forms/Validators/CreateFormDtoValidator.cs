@@ -61,7 +61,6 @@ namespace MarsOffice.Qeeps.Forms.Validators
 
                     x.RuleForEach(x => x.FormAccesses).ChildRules(x =>
                     {
-                        x.RuleFor(x => x.FullOrganisationId).NotEmpty().WithMessage("forms.createFormDto.accessOrganisationRequired");
                         x.RuleFor(x => x.OrganisationId).NotEmpty().WithMessage("forms.createFormDto.accessOrganisationRequired");
                     });
                 });
