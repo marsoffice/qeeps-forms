@@ -43,8 +43,6 @@ namespace MarsOffice.Qeeps.Forms.Validators
                         x.RuleFor(x => x.UserId).NotEmpty().WithMessage("forms.createFormDto.attachmentUserIdRequired");
                     });
 
-                    x.RuleFor(x => x.UserId).NotEmpty().WithMessage("forms.createFormDto.userIdRequired");
-
                     x.RuleForEach(x => x.Columns).ChildRules(x =>
                     {
                         x.RuleFor(x => x.DropdownOptions).NotNull().WithMessage("forms.createFormDto.dropdownOptionsRequired")
