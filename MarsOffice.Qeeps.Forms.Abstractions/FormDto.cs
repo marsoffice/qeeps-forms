@@ -24,5 +24,6 @@ namespace MarsOffice.Qeeps.Forms.Abstractions
         public IEnumerable<IEnumerable<dynamic>> Rows { get; set; }
 
         public IEnumerable<FormAccessDto> FormAccesses { get; set; }
+        public bool SendEmailNotifications { get; set; }
     }
 }
