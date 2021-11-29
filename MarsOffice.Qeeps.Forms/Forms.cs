@@ -41,7 +41,6 @@ namespace MarsOffice.Qeeps.Forms
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 });
                 await _formDtoValidator.ValidateAndThrowAsync(payload);
-                throw new Exception("asdasd");
                 return null;
             }
             catch (Exception e)
