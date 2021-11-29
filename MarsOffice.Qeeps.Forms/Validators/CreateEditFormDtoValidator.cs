@@ -6,9 +6,9 @@ using MarsOffice.Qeeps.Forms.Abstractions;
 
 namespace MarsOffice.Qeeps.Forms.Validators
 {
-    public class CreateFormDtoValidator : AbstractValidator<CreateFormDto>
+    public class CreateEditFormDtoValidator : AbstractValidator<CreateEditFormDto>
     {
-        public CreateFormDtoValidator()
+        public CreateEditFormDtoValidator()
         {
             RuleFor(x => x.Form).NotNull().WithMessage("forms.createFormDto.formRequired")
                 .ChildRules(x =>
