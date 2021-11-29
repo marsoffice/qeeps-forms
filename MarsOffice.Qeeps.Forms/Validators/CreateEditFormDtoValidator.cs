@@ -21,7 +21,7 @@ namespace MarsOffice.Qeeps.Forms.Validators
                         {
                             try
                             {
-                                var cronExpression = CronExpression.Parse(x);
+                                var cronExpression = CronExpression.Parse(x, CronFormat.IncludeSeconds);
                                 if (!x.StartsWith("0 0 "))
                                 {
                                     ctx.AddFailure("CronExpression", "forms.createFormDto.invalidCronExpression");
