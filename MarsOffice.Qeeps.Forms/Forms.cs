@@ -1,7 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using FluentValidation;
+using MarsOffice.Qeeps.Access.Abstractions;
 using MarsOffice.Qeeps.Forms.Abstractions;
 using MarsOffice.Qeeps.Microfunction;
 using Microsoft.AspNetCore.Http;
@@ -17,10 +21,12 @@ namespace MarsOffice.Qeeps.Forms
     public class Forms
     {
         private readonly IValidator<FormDto> _formDtoValidator;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public Forms(IValidator<FormDto> formDtoValidator)
+        public Forms(IValidator<FormDto> formDtoValidator, IHttpClientFactory httpClientFactory)
         {
             _formDtoValidator = formDtoValidator;
+            _httpClientFactory = httpClientFactory;
         }
 
         [FunctionName("CreateForm")]
@@ -31,6 +37,15 @@ namespace MarsOffice.Qeeps.Forms
         {
             try
             {
+                var principal = QeepsPrincipal.Parse(req);
+                var uid = principal.FindFirst("id").Value;
+
+                // validate role
+                if (!principal.FindAll("roles").Any(x => x.Value == "Admin" || x.Value == "Owner"))
+                {
+                    return new StatusCodeResult(401);
+                }
+
                 var json = string.Empty;
                 using (var streamReader = new StreamReader(req.Body))
                 {
@@ -41,6 +56,21 @@ namespace MarsOffice.Qeeps.Forms
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 });
                 await _formDtoValidator.ValidateAndThrowAsync(payload);
+
+                // validate orgs
+                if (payload.FormAccesses?.Any() == true)
+                {
+                    using var accessClient = _httpClientFactory.CreateClient("access");
+                    var orgsResponse = await accessClient.GetStringAsync("/api/access/getFullOrganisationsTree/" + uid);
+                    var userOrgs = JsonConvert.DeserializeObject<IEnumerable<OrganisationDto>>(orgsResponse, new JsonSerializerSettings
+                    {
+                        ContractResolver = new CamelCasePropertyNamesContractResolver()
+                    });
+                    if (payload.FormAccesses.Any(fa => !userOrgs.Any(uo => uo.Id == fa.OrganisationId)))
+                    {
+                        return new StatusCodeResult(401);
+                    }
+                }
                 return null;
             }
             catch (Exception e)
