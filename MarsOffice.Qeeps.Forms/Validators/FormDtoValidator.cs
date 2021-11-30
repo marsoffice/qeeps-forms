@@ -24,6 +24,11 @@ namespace MarsOffice.Qeeps.Forms.Validators
                         {
                             ctx.AddFailure("CronExpression", "forms.createFormDto.invalidCronExpression");
                         }
+                        var occurences = cronExpression.GetOccurrences(DateTime.UtcNow, DateTime.UtcNow.AddSeconds(30), true, true);
+                        if (occurences.Count() > 1)
+                        {
+                            ctx.AddFailure("CronExpression", "forms.createFormDto.invalidCronExpression");
+                        }
                     }
                     catch (Exception)
                     {
