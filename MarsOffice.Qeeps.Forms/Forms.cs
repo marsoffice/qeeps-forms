@@ -168,7 +168,9 @@ namespace MarsOffice.Qeeps.Forms
                 {
                     ContractResolver = new CamelCasePropertyNamesContractResolver()
                 });
-                var userOrgIds = userOrgs.Select(x => x.Id).Distinct().ToList();
+                var userOrgIds = userOrgs.Select(x => x.FullId)
+                    .SelectMany(x => x.Split("_").Skip(1).ToList())
+                    .Distinct().ToList();
 
                 var formsCollection = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
 
