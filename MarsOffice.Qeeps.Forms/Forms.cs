@@ -152,12 +152,12 @@ namespace MarsOffice.Qeeps.Forms
                 var principal = QeepsPrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
 
-                if (!int.TryParse(req.Query["elementsPerPage"].ToString(), out int elementsPerPage))
+                if (!req.Query.ContainsKey("elementsPerPage") || !int.TryParse(req.Query["elementsPerPage"].ToString(), out int elementsPerPage))
                 {
                     elementsPerPage = 50;
                 }
 
-                if (!int.TryParse(req.Query["page"].ToString(), out int page))
+                if (!req.Query.ContainsKey("page") || !int.TryParse(req.Query["page"].ToString(), out int page))
                 {
                     page = 0;
                 }
@@ -174,12 +174,17 @@ namespace MarsOffice.Qeeps.Forms
 
                 var formsCollection = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
 
-                var query = client.CreateDocumentQuery<FormEntity>(formsCollection, new FeedOptions
+                var queryable = client.CreateDocumentQuery<FormEntity>(formsCollection, new FeedOptions
                 {
                     EnableCrossPartitionQuery = true
                 }).Where(x =>
                 x.UserId == uid ||
-                (x.FormAccesses != null && x.FormAccesses.Any(fa => userOrgIds.Contains(fa.OrganisationId))))
+                (x.FormAccesses != null && x.FormAccesses.Any(fa => userOrgIds.Contains(fa.OrganisationId))));
+
+                // TODO search and filter, order
+
+
+                var query = queryable
                 .OrderByDescending(x => x.CreatedDate)
                 .Skip(page * elementsPerPage)
                 .Take(elementsPerPage)
