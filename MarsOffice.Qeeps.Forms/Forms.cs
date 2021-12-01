@@ -152,14 +152,17 @@ namespace MarsOffice.Qeeps.Forms
                 var principal = QeepsPrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
 
-                if (!req.Query.ContainsKey("elementsPerPage") || !int.TryParse(req.Query["elementsPerPage"].ToString(), out int elementsPerPage))
+                int? page = null;
+                int? elementsPerPage = null;
+
+                if (req.Query.ContainsKey("page"))
                 {
-                    elementsPerPage = 50;
+                    page = int.Parse(req.Query["page"].ToString());
                 }
 
-                if (!req.Query.ContainsKey("page") || !int.TryParse(req.Query["page"].ToString(), out int page))
+                if (req.Query.ContainsKey("elementsPerPage"))
                 {
-                    page = 0;
+                    elementsPerPage = int.Parse(req.Query["elementsPerPage"].ToString());
                 }
 
                 DateTime? startDate = null;
@@ -206,11 +209,15 @@ namespace MarsOffice.Qeeps.Forms
                     queryable = queryable.Where(x => x.CreatedDate <= endDate);
                 }
 
-                var query = queryable
-                .OrderByDescending(x => x.CreatedDate)
-                .Skip(page * elementsPerPage)
-                .Take(elementsPerPage)
-                .AsDocumentQuery();
+                queryable = queryable.OrderByDescending(x => x.CreatedDate);
+
+                if (page != null && elementsPerPage != null)
+                {
+                    queryable = queryable.Skip(page.Value * elementsPerPage.Value)
+                    .Take(elementsPerPage.Value);
+                }
+
+                var query = queryable.AsDocumentQuery();
 
                 var formDtos = new List<FormDto>();
 
