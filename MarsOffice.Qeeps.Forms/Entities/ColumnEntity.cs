@@ -6,6 +6,7 @@ namespace MarsOffice.Qeeps.Forms.Entities
     public class ColumnEntity
     {
         public string Name { get; set; }
+        public bool MultipleValues { get; set; }
         public bool IsRequired { get; set; }
         public IEnumerable<string> DropdownOptions { get; set; }
         public bool IsFrozen { get; set; }
