@@ -177,10 +177,12 @@ namespace MarsOffice.Qeeps.Forms
                 var query = client.CreateDocumentQuery<FormEntity>(formsCollection, new FeedOptions
                 {
                     EnableCrossPartitionQuery = true
-                }).Where(x => x.FormAccesses.Any(fa => userOrgIds.Contains(fa.OrganisationId)))
-                // .Skip(page * elementsPerPage)
-                // .Take(elementsPerPage)
+                }).Where(x =>
+                x.UserId == uid ||
+                (x.FormAccesses != null && x.FormAccesses.Any(fa => userOrgIds.Contains(fa.OrganisationId))))
                 .OrderByDescending(x => x.CreatedDate)
+                .Skip(page * elementsPerPage)
+                .Take(elementsPerPage)
                 .AsDocumentQuery();
 
                 var formDtos = new List<FormDto>();
