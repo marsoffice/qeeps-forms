@@ -10,6 +10,8 @@ using MarsOffice.Qeeps.Forms.Abstractions;
 using MarsOffice.Qeeps.Microfunction;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
@@ -32,11 +34,42 @@ namespace MarsOffice.Qeeps.Forms
         [FunctionName("CreateForm")]
         public async Task<IActionResult> CreateForm(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/forms/create")] HttpRequest req,
+            [CosmosDB(ConnectionStringSetting = "cdbconnectionstring", PreferredLocations = "%location%")] DocumentClient client,
             ILogger log
         )
         {
             try
             {
+#if DEBUG
+                var db = new Database
+                {
+                    Id = "forms"
+                };
+                await client.CreateDatabaseIfNotExistsAsync(db);
+
+                var col = new DocumentCollection
+                {
+                    Id = "Forms",
+                    PartitionKey = new PartitionKeyDefinition
+                    {
+                        Version = PartitionKeyDefinitionVersion.V2,
+                        Paths = new System.Collections.ObjectModel.Collection<string>(new List<string>() { "/UserId" })
+                    }
+                };
+                await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
+
+                col = new DocumentCollection
+                {
+                    Id = "FormAccesses",
+                    PartitionKey = new PartitionKeyDefinition
+                    {
+                        Version = PartitionKeyDefinitionVersion.V2,
+                        Paths = new System.Collections.ObjectModel.Collection<string>(new List<string>() { "/FormId" })
+                    }
+                };
+                await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
+#endif
+
                 var principal = QeepsPrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
 
