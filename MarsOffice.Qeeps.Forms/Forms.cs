@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
+using Microsoft.Azure.Documents.Linq;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
@@ -124,24 +125,27 @@ namespace MarsOffice.Qeeps.Forms
 
 
                 var formAccessesCollection = UriFactory.CreateDocumentCollectionUri("forms", "FormAccesses");
-                var insertAccessesTasks = new List<Task<ResourceResponse<Document>>>();
+
+                var dto = _mapper.Map<FormDto>(entity);
+                var formAccessDtos = new List<FormAccessDto>();
+
                 if (payload.FormAccesses != null)
                 {
                     foreach (var accessDto in payload.FormAccesses)
                     {
                         var accessEntity = _mapper.Map<FormAccessEntity>(accessDto);
                         accessEntity.FormId = entity.Id;
-                        insertAccessesTasks.Add(
-                            client.UpsertDocumentAsync(formAccessesCollection, accessEntity, new RequestOptions
-                            {
-                                PartitionKey = new PartitionKey(entity.Id)
-                            })
-                        );
+                        var insertResponse = await client.UpsertDocumentAsync(formAccessesCollection, accessEntity, new RequestOptions
+                        {
+                            PartitionKey = new PartitionKey(entity.Id)
+                        });
+                        accessEntity.Id = insertResponse.Resource.Id;
+                        formAccessDtos.Add(_mapper.Map<FormAccessDto>(accessEntity));
                     }
-                    await Task.WhenAll(insertAccessesTasks);
                 }
 
-                return new OkResult();
+                dto.FormAccesses = formAccessDtos;
+                return new OkObjectResult(dto);
             }
             catch (Exception e)
             {
@@ -151,14 +155,63 @@ namespace MarsOffice.Qeeps.Forms
         }
 
         [FunctionName("GetForms")]
-        public async Task<IActionResult> GetMyForms(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/forms/getMyForms")] HttpRequest req,
+        public async Task<IActionResult> GetForms(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/forms/getForms")] HttpRequest req,
+            [CosmosDB(ConnectionStringSetting = "cdbconnectionstring", PreferredLocations = "%location%")] DocumentClient client,
             ILogger log
         )
         {
             try
             {
-                // TODO
+#if DEBUG
+                var db = new Database
+                {
+                    Id = "forms"
+                };
+                await client.CreateDatabaseIfNotExistsAsync(db);
+
+                var col = new DocumentCollection
+                {
+                    Id = "Forms",
+                    PartitionKey = new PartitionKeyDefinition
+                    {
+                        Version = PartitionKeyDefinitionVersion.V2,
+                        Paths = new System.Collections.ObjectModel.Collection<string>(new List<string>() { "/UserId" })
+                    }
+                };
+                await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
+
+                col = new DocumentCollection
+                {
+                    Id = "FormAccesses",
+                    PartitionKey = new PartitionKeyDefinition
+                    {
+                        Version = PartitionKeyDefinitionVersion.V2,
+                        Paths = new System.Collections.ObjectModel.Collection<string>(new List<string>() { "/FormId" })
+                    }
+                };
+                await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
+#endif
+
+                var principal = QeepsPrincipal.Parse(req);
+                var uid = principal.FindFirst("id").Value;
+
+                using var accessClient = _httpClientFactory.CreateClient("access");
+                var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
+                var userOrgs = JsonConvert.DeserializeObject<IEnumerable<OrganisationDto>>(orgsResponse, new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                });
+                var userOrgIds = userOrgs.Select(x => x.Id).Distinct().ToList();
+
+                var formsCollection = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
+
+
+
+
+
+
+
                 return null;
             }
             catch (Exception e)

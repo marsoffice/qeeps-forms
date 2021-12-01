@@ -17,6 +17,6 @@ namespace MarsOffice.Qeeps.Forms.Entities
         public dynamic Min { get; set; }
         public dynamic Max { get; set; }
         public int? MinLength { get; set; }
-        public int MaxLength { get; set; }
+        public int? MaxLength { get; set; }
     }
 }
