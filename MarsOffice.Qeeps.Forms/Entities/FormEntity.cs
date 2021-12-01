@@ -24,5 +24,6 @@ namespace MarsOffice.Qeeps.Forms.Entities
         public IEnumerable<string> Tags { get; set; }
         public IEnumerable<ColumnEntity> Columns { get; set; }
         public IEnumerable<Dictionary<string, dynamic>> Rows { get; set; }
+        public IEnumerable<FormAccessEntity> FormAccesses { get; set; }
     }
 }

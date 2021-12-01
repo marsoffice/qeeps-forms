@@ -62,17 +62,6 @@ namespace MarsOffice.Qeeps.Forms
                     }
                 };
                 await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
-
-                col = new DocumentCollection
-                {
-                    Id = "FormAccesses",
-                    PartitionKey = new PartitionKeyDefinition
-                    {
-                        Version = PartitionKeyDefinitionVersion.V2,
-                        Paths = new System.Collections.ObjectModel.Collection<string>(new List<string>() { "/FormId" })
-                    }
-                };
-                await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
 #endif
 
                 var principal = QeepsPrincipal.Parse(req);
@@ -122,29 +111,7 @@ namespace MarsOffice.Qeeps.Forms
                     PartitionKey = new PartitionKey(uid)
                 });
                 entity.Id = insertFormResponse.Resource.Id;
-
-
-                var formAccessesCollection = UriFactory.CreateDocumentCollectionUri("forms", "FormAccesses");
-
                 var dto = _mapper.Map<FormDto>(entity);
-                var formAccessDtos = new List<FormAccessDto>();
-
-                if (payload.FormAccesses != null)
-                {
-                    foreach (var accessDto in payload.FormAccesses)
-                    {
-                        var accessEntity = _mapper.Map<FormAccessEntity>(accessDto);
-                        accessEntity.FormId = entity.Id;
-                        var insertResponse = await client.UpsertDocumentAsync(formAccessesCollection, accessEntity, new RequestOptions
-                        {
-                            PartitionKey = new PartitionKey(entity.Id)
-                        });
-                        accessEntity.Id = insertResponse.Resource.Id;
-                        formAccessDtos.Add(_mapper.Map<FormAccessDto>(accessEntity));
-                    }
-                }
-
-                dto.FormAccesses = formAccessDtos;
                 return new OkObjectResult(dto);
             }
             catch (Exception e)
@@ -180,21 +147,20 @@ namespace MarsOffice.Qeeps.Forms
                     }
                 };
                 await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
-
-                col = new DocumentCollection
-                {
-                    Id = "FormAccesses",
-                    PartitionKey = new PartitionKeyDefinition
-                    {
-                        Version = PartitionKeyDefinitionVersion.V2,
-                        Paths = new System.Collections.ObjectModel.Collection<string>(new List<string>() { "/FormId" })
-                    }
-                };
-                await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
 #endif
 
                 var principal = QeepsPrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
+
+                if (!int.TryParse(req.Query["elementsPerPage"].ToString(), out int elementsPerPage))
+                {
+                    elementsPerPage = 50;
+                }
+
+                if (!int.TryParse(req.Query["page"].ToString(), out int page))
+                {
+                    page = 0;
+                }
 
                 using var accessClient = _httpClientFactory.CreateClient("access");
                 var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
@@ -206,13 +172,24 @@ namespace MarsOffice.Qeeps.Forms
 
                 var formsCollection = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
 
+                var query = client.CreateDocumentQuery<FormEntity>(formsCollection, new FeedOptions
+                {
+                    EnableCrossPartitionQuery = true
+                }).Where(x => x.FormAccesses.Any(fa => userOrgIds.Contains(fa.OrganisationId)))
+                // .Skip(page * elementsPerPage)
+                // .Take(elementsPerPage)
+                .OrderByDescending(x => x.CreatedDate)
+                .AsDocumentQuery();
 
+                var formDtos = new List<FormDto>();
 
+                while (query.HasMoreResults)
+                {
+                    var response = await query.ExecuteNextAsync<FormEntity>();
+                    formDtos.AddRange(_mapper.Map<IEnumerable<FormDto>>(response));
+                }
 
-
-
-
-                return null;
+                return new OkObjectResult(formDtos);
             }
             catch (Exception e)
             {
