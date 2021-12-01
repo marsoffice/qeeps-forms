@@ -162,6 +162,19 @@ namespace MarsOffice.Qeeps.Forms
                     page = 0;
                 }
 
+                DateTime? startDate = null;
+                DateTime? endDate = null;
+
+                if (req.Query.ContainsKey("startDate"))
+                {
+                    startDate = DateTime.Parse(req.Query["startDate"].ToString());
+                }
+
+                if (req.Query.ContainsKey("endDate"))
+                {
+                    endDate = DateTime.Parse(req.Query["endDate"].ToString());
+                }
+
                 using var accessClient = _httpClientFactory.CreateClient("access");
                 var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
                 var userOrgs = JsonConvert.DeserializeObject<IEnumerable<OrganisationDto>>(orgsResponse, new JsonSerializerSettings
@@ -183,6 +196,15 @@ namespace MarsOffice.Qeeps.Forms
 
                 // TODO search and filter, order
 
+                if (startDate != null)
+                {
+                    queryable = queryable.Where(x => x.CreatedDate >= startDate);
+                }
+
+                if (endDate != null)
+                {
+                    queryable = queryable.Where(x => x.CreatedDate <= endDate);
+                }
 
                 var query = queryable
                 .OrderByDescending(x => x.CreatedDate)
