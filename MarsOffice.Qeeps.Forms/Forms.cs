@@ -267,13 +267,29 @@ namespace MarsOffice.Qeeps.Forms
                 var principal = QeepsPrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
                 var formId = req.RouteValues["id"].ToString();
-                var formDocumentUri = UriFactory.CreateDocumentUri("forms", "Forms", formId);
-                var response = await client.ReadDocumentAsync<FormEntity>(formDocumentUri);
-                if (response.Document == null)
+                var formsCollectionUri = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
+                var query = client.CreateDocumentQuery<FormEntity>(formsCollectionUri, new FeedOptions
+                {
+                    EnableCrossPartitionQuery = true
+                })
+                .Where(x => x.Id == formId)
+                .Take(1)
+                .AsDocumentQuery();
+
+                if (!query.HasMoreResults)
                 {
                     return new NotFoundResult();
                 }
-                var entity = response.Document;
+
+                var response = await query.ExecuteNextAsync<FormEntity>();
+
+                if (response.Count == 0)
+                {
+                    return new NotFoundResult();
+                }
+
+                var entity = response.First();
+
                 if (entity.UserId == uid)
                 {
                     return new OkObjectResult(_mapper.Map<FormDto>(entity));
