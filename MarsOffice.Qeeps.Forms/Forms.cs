@@ -206,7 +206,7 @@ namespace MarsOffice.Qeeps.Forms
 
                 if (endDate != null)
                 {
-                    queryable = queryable.Where(x => x.CreatedDate <= endDate);
+                    queryable = queryable.Where(x => x.CreatedDate < endDate);
                 }
 
                 queryable = queryable.OrderByDescending(x => x.CreatedDate);
