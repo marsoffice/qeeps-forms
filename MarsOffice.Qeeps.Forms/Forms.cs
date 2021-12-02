@@ -235,5 +235,69 @@ namespace MarsOffice.Qeeps.Forms
                 return new BadRequestObjectResult(Errors.Extract(e));
             }
         }
+
+        [FunctionName("GetForm")]
+        public async Task<IActionResult> GetForm(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/forms/getForm/{id}")] HttpRequest req,
+            [CosmosDB(ConnectionStringSetting = "cdbconnectionstring", PreferredLocations = "%location%")] DocumentClient client,
+            ILogger log
+        )
+        {
+            try
+            {
+#if DEBUG
+                var db = new Database
+                {
+                    Id = "forms"
+                };
+                await client.CreateDatabaseIfNotExistsAsync(db);
+
+                var col = new DocumentCollection
+                {
+                    Id = "Forms",
+                    PartitionKey = new PartitionKeyDefinition
+                    {
+                        Version = PartitionKeyDefinitionVersion.V2,
+                        Paths = new System.Collections.ObjectModel.Collection<string>(new List<string>() { "/UserId" })
+                    }
+                };
+                await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
+#endif
+
+                var principal = QeepsPrincipal.Parse(req);
+                var uid = principal.FindFirst("id").Value;
+                var formId = req.RouteValues["id"].ToString();
+                var formDocumentUri = UriFactory.CreateDocumentUri("forms", "Forms", formId);
+                var response = await client.ReadDocumentAsync<FormEntity>(formDocumentUri);
+                if (response.Document == null)
+                {
+                    return new NotFoundResult();
+                }
+                var entity = response.Document;
+                if (entity.UserId == uid)
+                {
+                    return new OkObjectResult(_mapper.Map<FormDto>(entity));
+                }
+                using var accessClient = _httpClientFactory.CreateClient("access");
+                var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
+                var userOrgs = JsonConvert.DeserializeObject<IEnumerable<OrganisationDto>>(orgsResponse, new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                });
+                var userOrgIds = userOrgs.Select(x => x.FullId)
+                    .SelectMany(x => x.Split("_").Skip(1).ToList())
+                    .Distinct().ToList();
+                if (entity.FormAccesses == null || !entity.FormAccesses.Any(fa => userOrgIds.Contains(fa.OrganisationId)))
+                {
+                    return new StatusCodeResult(401);
+                }
+                return new OkObjectResult(_mapper.Map<FormDto>(entity));
+            }
+            catch (Exception e)
+            {
+                log.LogError(e, "Exception occured in function");
+                return new BadRequestObjectResult(Errors.Extract(e));
+            }
+        }
     }
 }
