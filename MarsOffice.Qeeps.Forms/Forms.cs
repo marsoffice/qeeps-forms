@@ -170,12 +170,12 @@ namespace MarsOffice.Qeeps.Forms
 
                 if (req.Query.ContainsKey("startDate"))
                 {
-                    startDate = DateTime.Parse(req.Query["startDate"].ToString());
+                    startDate = DateTime.Parse(req.Query["startDate"].ToString()).ToUniversalTime();
                 }
 
                 if (req.Query.ContainsKey("endDate"))
                 {
-                    endDate = DateTime.Parse(req.Query["endDate"].ToString());
+                    endDate = DateTime.Parse(req.Query["endDate"].ToString()).ToUniversalTime();
                 }
 
                 using var accessClient = _httpClientFactory.CreateClient("access");
