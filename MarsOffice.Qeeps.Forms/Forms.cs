@@ -160,29 +160,17 @@ namespace MarsOffice.Qeeps.Forms
                 }
 
                 var formId = req.RouteValues["id"].ToString();
-                var formsCollectionUri = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
-                var query = client.CreateDocumentQuery<FormEntity>(formsCollectionUri, new FeedOptions
-                {
-                    EnableCrossPartitionQuery = true
-                })
-                .Where(x => x.Id == formId)
-                .Take(1)
-                .AsDocumentQuery();
 
-                if (!query.HasMoreResults)
+                var documentUri = UriFactory.CreateDocumentUri("forms", "Forms", formId);
+                var entityResponse = await client.ReadDocumentAsync<FormEntity>(documentUri, new RequestOptions
+                {
+                    PartitionKey = new PartitionKey(uid)
+                });
+                if (entityResponse.Document == null)
                 {
                     return new NotFoundResult();
                 }
-
-                var response = await query.ExecuteNextAsync<FormEntity>();
-
-                if (response.Count == 0)
-                {
-                    return new NotFoundResult();
-                }
-
-                var entity = response.First();
-
+                var entity = entityResponse.Document;
                 if (entity.UserId != uid)
                 {
                     return new StatusCodeResult(401);
@@ -219,6 +207,7 @@ namespace MarsOffice.Qeeps.Forms
                 _mapper.Map(payload, entity);
                 entity.ModifiedDate = DateTime.UtcNow;
 
+                var formsCollectionUri = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
                 await client.UpsertDocumentAsync(formsCollectionUri, entity, new RequestOptions
                 {
                     PartitionKey = new PartitionKey(uid)

@@ -6,10 +6,13 @@ namespace MarsOffice.Qeeps.Forms.Mappers
 {
     public class FormMapper : Profile
     {
-        public  FormMapper()
+        public FormMapper()
         {
-            CreateMap<FormEntity, FormDto>().PreserveReferences()
-            .ReverseMap().PreserveReferences();
+            var m1 = CreateMap<FormEntity, FormDto>().PreserveReferences();
+            var m2 = m1.ReverseMap().PreserveReferences();
+            m2.ForMember(x => x.CreatedDate, y => y.Ignore())
+                .ForMember(x => x.Id, y => y.Ignore())
+                .ForMember(x => x.UserId, y => y.Ignore());
         }
     }
 }
