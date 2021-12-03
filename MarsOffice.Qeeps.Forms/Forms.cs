@@ -121,6 +121,119 @@ namespace MarsOffice.Qeeps.Forms
             }
         }
 
+        [FunctionName("UpdateForm")]
+        public async Task<IActionResult> UpdateForm(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "api/forms/update/{id}")] HttpRequest req,
+            [CosmosDB(ConnectionStringSetting = "cdbconnectionstring", PreferredLocations = "%location%")] DocumentClient client,
+            ILogger log
+        )
+        {
+            try
+            {
+#if DEBUG
+                var db = new Database
+                {
+                    Id = "forms"
+                };
+                await client.CreateDatabaseIfNotExistsAsync(db);
+
+                var col = new DocumentCollection
+                {
+                    Id = "Forms",
+                    PartitionKey = new PartitionKeyDefinition
+                    {
+                        Version = PartitionKeyDefinitionVersion.V2,
+                        Paths = new System.Collections.ObjectModel.Collection<string>(new List<string>() { "/UserId" })
+                    }
+                };
+                await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
+#endif
+
+                var principal = QeepsPrincipal.Parse(req);
+                var uid = principal.FindFirst("id").Value;
+
+
+                // validate role
+                if (!principal.FindAll("roles").Any(x => x.Value == "Admin" || x.Value == "Owner"))
+                {
+                    return new StatusCodeResult(401);
+                }
+
+                var formId = req.RouteValues["id"].ToString();
+                var formsCollectionUri = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
+                var query = client.CreateDocumentQuery<FormEntity>(formsCollectionUri, new FeedOptions
+                {
+                    EnableCrossPartitionQuery = true
+                })
+                .Where(x => x.Id == formId)
+                .Take(1)
+                .AsDocumentQuery();
+
+                if (!query.HasMoreResults)
+                {
+                    return new NotFoundResult();
+                }
+
+                var response = await query.ExecuteNextAsync<FormEntity>();
+
+                if (response.Count == 0)
+                {
+                    return new NotFoundResult();
+                }
+
+                var entity = response.First();
+
+                if (entity.UserId != uid)
+                {
+                    return new StatusCodeResult(401);
+                }
+
+
+                var json = string.Empty;
+                using (var streamReader = new StreamReader(req.Body))
+                {
+                    json = await streamReader.ReadToEndAsync();
+                }
+                var payload = JsonConvert.DeserializeObject<FormDto>(json, new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                });
+                await _formDtoValidator.ValidateAndThrowAsync(payload);
+
+                // validate orgs
+                if (payload.FormAccesses?.Any() == true)
+                {
+                    using var accessClient = _httpClientFactory.CreateClient("access");
+                    var orgsResponse = await accessClient.GetStringAsync("/api/access/getFullOrganisationsTree/" + uid);
+                    var userOrgs = JsonConvert.DeserializeObject<IEnumerable<OrganisationDto>>(orgsResponse, new JsonSerializerSettings
+                    {
+                        ContractResolver = new CamelCasePropertyNamesContractResolver()
+                    });
+                    if (payload.FormAccesses.Any(fa => !userOrgs.Any(uo => uo.Id == fa.OrganisationId)))
+                    {
+                        return new StatusCodeResult(401);
+                    }
+                }
+
+                // map and save form
+                _mapper.Map(payload, entity);
+                entity.ModifiedDate = DateTime.UtcNow;
+
+                await client.UpsertDocumentAsync(formsCollectionUri, entity, new RequestOptions
+                {
+                    PartitionKey = new PartitionKey(uid)
+                });
+
+                var dto = _mapper.Map<FormDto>(entity);
+                return new OkObjectResult(dto);
+            }
+            catch (Exception e)
+            {
+                log.LogError(e, "Exception occured in function");
+                return new BadRequestObjectResult(Errors.Extract(e));
+            }
+        }
+
         [FunctionName("GetForms")]
         public async Task<IActionResult> GetForms(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/forms/getForms")] HttpRequest req,
