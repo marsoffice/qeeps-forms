@@ -60,6 +60,9 @@ namespace MarsOffice.Qeeps.Forms.Validators
                 .WithMessage("forms.createFormDto.allRowValuesMustMatchColumnCount")
                 .When(x => x.Rows != null && x.Rows.Any());
 
+            RuleFor(x => x.Deadline.Value).GreaterThan(DateTime.UtcNow).WithMessage("forms.createFormDto.invalidDeadline")
+                .When(x => x.Deadline != null);
+
             RuleForEach(x => x.FormAccesses).ChildRules(x =>
             {
                 x.RuleFor(x => x.OrganisationId).NotEmpty().WithMessage("forms.createFormDto.accessOrganisationRequired");

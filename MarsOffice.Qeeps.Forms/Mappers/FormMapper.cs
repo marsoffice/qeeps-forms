@@ -12,6 +12,7 @@ namespace MarsOffice.Qeeps.Forms.Mappers
             var m2 = m1.ReverseMap().PreserveReferences();
             m2.ForMember(x => x.CreatedDate, y => y.Ignore())
                 .ForMember(x => x.Id, y => y.Ignore())
+                .ForMember(x => x.UserName, y => y.Ignore())
                 .ForMember(x => x.UserId, y => y.Ignore());
         }
     }

@@ -102,6 +102,7 @@ namespace MarsOffice.Qeeps.Forms
                 // map and save form
                 var entity = _mapper.Map<FormEntity>(payload);
                 entity.UserId = uid;
+                entity.UserName = principal.FindFirst("name").Value.ToString();
                 entity.CreatedDate = DateTime.UtcNow;
 
                 var formsCollection = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
