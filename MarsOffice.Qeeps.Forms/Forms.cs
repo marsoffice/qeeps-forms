@@ -313,6 +313,8 @@ namespace MarsOffice.Qeeps.Forms
 
                 queryable = queryable.OrderByDescending(x => x.CreatedDate);
 
+                var countQueryable = queryable;
+
                 if (page != null && elementsPerPage != null)
                 {
                     queryable = queryable.Skip(page.Value * elementsPerPage.Value)
@@ -329,7 +331,15 @@ namespace MarsOffice.Qeeps.Forms
                     formDtos.AddRange(_mapper.Map<IEnumerable<FormDto>>(response));
                 }
 
-                return new OkObjectResult(formDtos);
+                var total = await countQueryable
+                    .CountAsync();
+
+
+                return new OkObjectResult(new FormsListResultDto
+                {
+                    Forms = formDtos,
+                    Total = total
+                });
             }
             catch (Exception e)
             {
