@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net.Http;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -314,7 +315,27 @@ namespace MarsOffice.Qeeps.Forms
                     queryable = queryable.Where(x => x.CreatedDate < endDate);
                 }
 
-                queryable = queryable.OrderByDescending(x => x.CreatedDate);
+                if (!string.IsNullOrEmpty(search))
+                {
+                    var searchLower = search.ToLower();
+                    queryable = queryable
+                        .Where(x => x.Title.ToLower().Contains(searchLower) ||
+                        x.UserName.ToLower().Contains(searchLower) ||
+                        x.Description.ToLower().Contains(searchLower)
+                        );
+                }
+
+                if (!string.IsNullOrEmpty(sortBy) && !string.IsNullOrEmpty(sortOrder))
+                {
+                    if (sortOrder == "asc")
+                    {
+                        queryable = queryable.OrderBy(GetPropertyExpression(sortBy));
+                    }
+                    else
+                    {
+                        queryable = queryable.OrderByDescending(GetPropertyExpression(sortBy));
+                    }
+                }
 
                 var countQueryable = queryable;
 
@@ -571,6 +592,18 @@ namespace MarsOffice.Qeeps.Forms
                 log.LogError(e, "Exception occured in function");
                 return new BadRequestObjectResult(Errors.Extract(e));
             }
+        }
+
+        private Expression<Func<FormEntity, object>> GetPropertyExpression(string propertyName)
+        {
+            return propertyName switch
+            {
+                "title" => x => x.Title,
+                "createdDate" => x => x.CreatedDate,
+                "deadline" => x => x.Deadline,
+                "userName" => x => x.UserName,
+                _ => throw new Exception("forms.getForms.invalidSortColumn"),
+            };
         }
     }
 }
