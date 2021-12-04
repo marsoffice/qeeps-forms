@@ -501,5 +501,74 @@ namespace MarsOffice.Qeeps.Forms
                 return new BadRequestObjectResult(Errors.Extract(e));
             }
         }
+
+        [FunctionName("DeleteForm")]
+        public async Task<IActionResult> DeleteForm(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "api/forms/delete/{id}")] HttpRequest req,
+            [CosmosDB(ConnectionStringSetting = "cdbconnectionstring", PreferredLocations = "%location%")] DocumentClient client,
+            ILogger log
+        )
+        {
+            try
+            {
+#if DEBUG
+                var db = new Database
+                {
+                    Id = "forms"
+                };
+                await client.CreateDatabaseIfNotExistsAsync(db);
+
+                var col = new DocumentCollection
+                {
+                    Id = "Forms",
+                    PartitionKey = new PartitionKeyDefinition
+                    {
+                        Version = PartitionKeyDefinitionVersion.V2,
+                        Paths = new System.Collections.ObjectModel.Collection<string>(new List<string>() { "/UserId" })
+                    }
+                };
+                await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
+#endif
+
+                var principal = QeepsPrincipal.Parse(req);
+                var uid = principal.FindFirst("id").Value;
+
+
+                // validate role
+                if (!principal.FindAll("roles").Any(x => x.Value == "Admin" || x.Value == "Owner"))
+                {
+                    return new StatusCodeResult(401);
+                }
+
+                var formId = req.RouteValues["id"].ToString();
+
+                var documentUri = UriFactory.CreateDocumentUri("forms", "Forms", formId);
+                var entityResponse = await client.ReadDocumentAsync<FormEntity>(documentUri, new RequestOptions
+                {
+                    PartitionKey = new PartitionKey(uid)
+                });
+                if (entityResponse.Document == null)
+                {
+                    return new NotFoundResult();
+                }
+                var entity = entityResponse.Document;
+                if (entity.UserId != uid)
+                {
+                    return new StatusCodeResult(401);
+                }
+
+                await client.DeleteDocumentAsync(documentUri, new RequestOptions
+                {
+                    PartitionKey = new PartitionKey(uid)
+                });
+
+                return new OkResult();
+            }
+            catch (Exception e)
+            {
+                log.LogError(e, "Exception occured in function");
+                return new BadRequestObjectResult(Errors.Extract(e));
+            }
+        }
     }
 }
