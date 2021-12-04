@@ -349,6 +349,79 @@ namespace MarsOffice.Qeeps.Forms
             }
         }
 
+        [FunctionName("GetPinnedForms")]
+        public async Task<IActionResult> GetPinnedForms(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/forms/getPinnedForms")] HttpRequest req,
+            [CosmosDB(ConnectionStringSetting = "cdbconnectionstring", PreferredLocations = "%location%")] DocumentClient client,
+            ILogger log
+        )
+        {
+            try
+            {
+#if DEBUG
+                var db = new Database
+                {
+                    Id = "forms"
+                };
+                await client.CreateDatabaseIfNotExistsAsync(db);
+
+                var col = new DocumentCollection
+                {
+                    Id = "Forms",
+                    PartitionKey = new PartitionKeyDefinition
+                    {
+                        Version = PartitionKeyDefinitionVersion.V2,
+                        Paths = new System.Collections.ObjectModel.Collection<string>(new List<string>() { "/UserId" })
+                    }
+                };
+                await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
+#endif
+
+                var principal = QeepsPrincipal.Parse(req);
+                var uid = principal.FindFirst("id").Value;
+
+                using var accessClient = _httpClientFactory.CreateClient("access");
+                var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
+                var userOrgs = JsonConvert.DeserializeObject<IEnumerable<OrganisationDto>>(orgsResponse, new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                });
+                var userOrgIds = userOrgs.Select(x => x.FullId)
+                    .SelectMany(x => x.Split("_").Skip(1).ToList())
+                    .Distinct().ToList();
+
+                var formsCollection = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
+                var today = DateTime.UtcNow;
+                var queryable = client.CreateDocumentQuery<FormEntity>(formsCollection, new FeedOptions
+                {
+                    EnableCrossPartitionQuery = true
+                }).Where(x =>
+                (x.UserId == uid ||
+                (x.FormAccesses != null && x.FormAccesses.Any(fa => userOrgIds.Contains(fa.OrganisationId)))
+                ) && x.IsPinned && (x.PinnedUntilDate == null || x.PinnedUntilDate.Value > today)
+                );
+
+                queryable = queryable.OrderByDescending(x => x.CreatedDate);
+
+                var query = queryable.AsDocumentQuery();
+
+                var formDtos = new List<FormDto>();
+
+                while (query.HasMoreResults)
+                {
+                    var response = await query.ExecuteNextAsync<FormEntity>();
+                    formDtos.AddRange(_mapper.Map<IEnumerable<FormDto>>(response));
+                }
+
+                return new OkObjectResult(formDtos);
+            }
+            catch (Exception e)
+            {
+                log.LogError(e, "Exception occured in function");
+                return new BadRequestObjectResult(Errors.Extract(e));
+            }
+        }
+
         [FunctionName("GetForm")]
         public async Task<IActionResult> GetForm(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "api/forms/getForm/{id}")] HttpRequest req,
