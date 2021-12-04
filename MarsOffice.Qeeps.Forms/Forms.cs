@@ -281,6 +281,10 @@ namespace MarsOffice.Qeeps.Forms
                     endDate = DateTime.Parse(req.Query["endDate"].ToString()).ToUniversalTime();
                 }
 
+                var search = req.Query.ContainsKey("search") ? req.Query["search"].ToString() : null;
+                var sortBy = req.Query.ContainsKey("sortBy") ? req.Query["sortBy"].ToString() : null;
+                var sortOrder = req.Query.ContainsKey("sortOrder") ? req.Query["sortOrder"].ToString() : null;
+
                 using var accessClient = _httpClientFactory.CreateClient("access");
                 var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
                 var userOrgs = JsonConvert.DeserializeObject<IEnumerable<OrganisationDto>>(orgsResponse, new JsonSerializerSettings
@@ -299,8 +303,6 @@ namespace MarsOffice.Qeeps.Forms
                 }).Where(x =>
                 x.UserId == uid ||
                 (x.FormAccesses != null && x.FormAccesses.Any(fa => userOrgIds.Contains(fa.OrganisationId))));
-
-                // TODO search and filter, order
 
                 if (startDate != null)
                 {
