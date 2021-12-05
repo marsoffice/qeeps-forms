@@ -102,6 +102,10 @@ namespace MarsOffice.Qeeps.Forms
 
                 // map and save form
                 var entity = _mapper.Map<FormEntity>(payload);
+                if (entity.Tags != null)
+                {
+                    entity.Tags = entity.Tags.Select(x => x.ToLower()).ToList();
+                }
                 entity.UserId = uid;
                 entity.UserName = principal.FindFirst("name").Value.ToString();
                 entity.CreatedDate = DateTime.UtcNow;
@@ -208,6 +212,10 @@ namespace MarsOffice.Qeeps.Forms
                 // map and save form
                 _mapper.Map(payload, entity);
                 entity.ModifiedDate = DateTime.UtcNow;
+                if (entity.Tags != null)
+                {
+                    entity.Tags = entity.Tags.Select(x => x.ToLower()).ToList();
+                }
 
                 var formsCollectionUri = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
                 await client.UpsertDocumentAsync(formsCollectionUri, entity, new RequestOptions
@@ -285,7 +293,7 @@ namespace MarsOffice.Qeeps.Forms
                 var search = req.Query.ContainsKey("search") ? req.Query["search"].ToString() : null;
                 var sortBy = req.Query.ContainsKey("sortBy") ? req.Query["sortBy"].ToString() : null;
                 var sortOrder = req.Query.ContainsKey("sortOrder") ? req.Query["sortOrder"].ToString() : null;
-                var tags = req.Query.ContainsKey("sortOrder") ? req.Query["sortOrder"].ToString().Split(",") : null;
+                var tags = req.Query.ContainsKey("tags") ? req.Query["tags"].ToString().Split(",").Select(x => x.ToLower()).ToList() : null;
 
                 using var accessClient = _httpClientFactory.CreateClient("access");
                 var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
