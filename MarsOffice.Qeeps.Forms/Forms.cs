@@ -285,6 +285,7 @@ namespace MarsOffice.Qeeps.Forms
                 var search = req.Query.ContainsKey("search") ? req.Query["search"].ToString() : null;
                 var sortBy = req.Query.ContainsKey("sortBy") ? req.Query["sortBy"].ToString() : null;
                 var sortOrder = req.Query.ContainsKey("sortOrder") ? req.Query["sortOrder"].ToString() : null;
+                var tags = req.Query.ContainsKey("sortOrder") ? req.Query["sortOrder"].ToString().Split(",") : null;
 
                 using var accessClient = _httpClientFactory.CreateClient("access");
                 var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
@@ -323,6 +324,11 @@ namespace MarsOffice.Qeeps.Forms
                         x.UserName.ToLower().Contains(searchLower) ||
                         x.Description.ToLower().Contains(searchLower)
                         );
+                }
+
+                if (tags != null && tags.Any())
+                {
+                    queryable = queryable.Where(x => x.Tags != null && x.Tags.Any(t => tags.Contains(t)));
                 }
 
                 if (!string.IsNullOrEmpty(sortBy) && !string.IsNullOrEmpty(sortOrder))
