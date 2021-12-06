@@ -11,6 +11,7 @@ using MarsOffice.Qeeps.Access.Abstractions;
 using MarsOffice.Qeeps.Forms.Abstractions;
 using MarsOffice.Qeeps.Forms.Entities;
 using MarsOffice.Qeeps.Microfunction;
+using MarsOffice.Qeeps.Notifications.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Documents;
@@ -41,7 +42,14 @@ namespace MarsOffice.Qeeps.Forms
         public async Task<IActionResult> CreateForm(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "api/forms/create")] HttpRequest req,
             [CosmosDB(ConnectionStringSetting = "cdbconnectionstring", PreferredLocations = "%location%")] DocumentClient client,
-            ILogger log
+            ILogger log,
+            [ServiceBus(
+                #if DEBUG
+                "notifications-dev",
+                #else
+                "notifications",
+                #endif
+                 Connection = "sbconnectionstring")] IAsyncCollector<RequestNotificationDto> outputNotifications
         )
         {
             try
@@ -131,7 +139,14 @@ namespace MarsOffice.Qeeps.Forms
         public async Task<IActionResult> UpdateForm(
             [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "api/forms/update/{id}")] HttpRequest req,
             [CosmosDB(ConnectionStringSetting = "cdbconnectionstring", PreferredLocations = "%location%")] DocumentClient client,
-            ILogger log
+            ILogger log,
+            [ServiceBus(
+                #if DEBUG
+                "notifications-dev",
+                #else
+                "notifications",
+                #endif
+                 Connection = "sbconnectionstring")] IAsyncCollector<RequestNotificationDto> outputNotifications
         )
         {
             try
