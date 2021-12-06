@@ -20,6 +20,7 @@ namespace MarsOffice.Qeeps.Forms.Abstractions
         public bool RowAppendDisabled { get; set; }
         public bool IsRecurrent { get; set; }
         public string CronExpression { get; set; }
+        public bool KeepPreviousDataOnRecurrence { get; set; }
         public bool IsPinned { get; set; }
         public DateTime? PinnedUntilDate { get; set; }
         public IEnumerable<string> Tags { get; set; }
