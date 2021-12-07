@@ -128,7 +128,7 @@ namespace MarsOffice.Qeeps.Forms
                 var dto = _mapper.Map<FormDto>(entity);
 
                 // Notifications
-                await SendNotificationsForFormEntity(entity, outputNotifications, log, "FormCreated", payload.SendEmailNotifications);
+                await SendNotificationsForFormEntity(uid, entity, outputNotifications, log, "FormCreated", payload.SendEmailNotifications);
 
                 return new OkObjectResult(dto);
             }
@@ -245,7 +245,7 @@ namespace MarsOffice.Qeeps.Forms
                 var dto = _mapper.Map<FormDto>(entity);
 
                 // Notifications
-                await SendNotificationsForFormEntity(entity, outputNotifications, log, "FormUpdated", payload.SendEmailNotifications);
+                await SendNotificationsForFormEntity(uid, entity, outputNotifications, log, "FormUpdated", payload.SendEmailNotifications);
 
                 return new OkObjectResult(dto);
             }
@@ -643,7 +643,7 @@ namespace MarsOffice.Qeeps.Forms
             };
         }
 
-        private async Task SendNotificationsForFormEntity(FormEntity entity, IAsyncCollector<RequestNotificationDto> outputNotifications, ILogger log, string templateName, bool sendEmail)
+        private async Task SendNotificationsForFormEntity(string myId, FormEntity entity, IAsyncCollector<RequestNotificationDto> outputNotifications, ILogger log, string templateName, bool sendEmail)
         {
             try
             {
@@ -660,7 +660,7 @@ namespace MarsOffice.Qeeps.Forms
                         });
                         userDtos.AddRange(userDtosResponse);
                     }
-                    userDtos = userDtos.DistinctBy(x => x.Id).ToList();
+                    userDtos = userDtos.DistinctBy(x => x.Id).Where(x => x.Id != myId).ToList();
                     if (!userDtos.Any())
                     {
                         return;
