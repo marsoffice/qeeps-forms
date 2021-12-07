@@ -126,6 +126,10 @@ namespace MarsOffice.Qeeps.Forms
                 });
                 entity.Id = insertFormResponse.Resource.Id;
                 var dto = _mapper.Map<FormDto>(entity);
+
+                // Notifications
+                await SendNotificationsForFormEntity(entity, outputNotifications, log, "FormCreated", payload.SendEmailNotifications);
+
                 return new OkObjectResult(dto);
             }
             catch (Exception e)
@@ -239,6 +243,10 @@ namespace MarsOffice.Qeeps.Forms
                 });
 
                 var dto = _mapper.Map<FormDto>(entity);
+
+                // Notifications
+                await SendNotificationsForFormEntity(entity, outputNotifications, log, "FormUpdated", payload.SendEmailNotifications);
+
                 return new OkObjectResult(dto);
             }
             catch (Exception e)
@@ -555,7 +563,7 @@ namespace MarsOffice.Qeeps.Forms
         }
 
         [FunctionName("DeleteForm")]
-        public async Task<IActionResult> DeleteForm(
+        public static async Task<IActionResult> DeleteForm(
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "api/forms/delete/{id}")] HttpRequest req,
             [CosmosDB(ConnectionStringSetting = "cdbconnectionstring", PreferredLocations = "%location%")] DocumentClient client,
             ILogger log
@@ -623,7 +631,7 @@ namespace MarsOffice.Qeeps.Forms
             }
         }
 
-        private Expression<Func<FormEntity, object>> GetPropertyExpression(string propertyName)
+        private static Expression<Func<FormEntity, object>> GetPropertyExpression(string propertyName)
         {
             return propertyName switch
             {
@@ -633,6 +641,71 @@ namespace MarsOffice.Qeeps.Forms
                 "userName" => x => x.UserName,
                 _ => throw new Exception("forms.getForms.invalidSortColumn"),
             };
+        }
+
+        private async Task SendNotificationsForFormEntity(FormEntity entity, IAsyncCollector<RequestNotificationDto> outputNotifications, ILogger log, string templateName, bool sendEmail)
+        {
+            try
+            {
+                using var accessClient = _httpClientFactory.CreateClient("access");
+                if (entity.FormAccesses?.Any() == true)
+                {
+                    var userDtos = new List<UserDto>();
+                    foreach (var accessEntity in entity.FormAccesses)
+                    {
+                        var usersResponse = await accessClient.GetStringAsync("/api/access/getUsersByOrganisationId/" + accessEntity.OrganisationId + "?includeDetails=true");
+                        var userDtosResponse = JsonConvert.DeserializeObject<IEnumerable<UserDto>>(usersResponse, new JsonSerializerSettings
+                        {
+                            ContractResolver = new CamelCasePropertyNamesContractResolver()
+                        });
+                        userDtos.AddRange(userDtosResponse);
+                    }
+                    userDtos = userDtos.DistinctBy(x => x.Id).ToList();
+                    if (!userDtos.Any())
+                    {
+                        return;
+                    }
+                    var batchSize = 100;
+                    var noOfBatches = (int)Math.Ceiling(userDtos.Count * 1f / batchSize);
+
+                    var notificationTypes = new List<NotificationType> {
+                        NotificationType.InApp
+                    };
+                    if (sendEmail)
+                    {
+                        notificationTypes.Add(NotificationType.Email);
+                    }
+
+                    for (var i = 0; i < noOfBatches; i++)
+                    {
+                        var usersSlice = userDtos.Skip(i * batchSize).Take(batchSize).ToList();
+                        await outputNotifications.AddAsync(new RequestNotificationDto
+                        {
+                            AbsoluteRouteUrl = "/forms/view/" + entity.Id,
+                            NotificationTypes = notificationTypes,
+                            PlaceholderData = new Dictionary<string, string> {
+                                {"formName", entity.Title},
+                                {"userName", entity.UserName},
+                                {"link", "/forms/view/" + entity.Id}
+                            },
+                            Severity = Notifications.Abstractions.Severity.Info,
+                            TemplateName = templateName,
+                            Recipients = usersSlice.Select(u => new RecipientDto
+                            {
+                                Email = u.Email,
+                                PreferredLanguage = u.UserPreferences?.PreferredLanguage,
+                                UserId = u.Id
+                            }).ToList()
+                        });
+                    }
+
+                    await outputNotifications.FlushAsync();
+                }
+            }
+            catch (Exception exc)
+            {
+                log.LogError(exc, "Notifications failed");
+            }
         }
     }
 }
