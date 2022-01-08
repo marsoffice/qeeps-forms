@@ -7,10 +7,10 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using AutoMapper;
 using FluentValidation;
+using MarsOffice.Microfunction;
 using MarsOffice.Qeeps.Access.Abstractions;
 using MarsOffice.Qeeps.Forms.Abstractions;
 using MarsOffice.Qeeps.Forms.Entities;
-using MarsOffice.Qeeps.Microfunction;
 using MarsOffice.Qeeps.Notifications.Abstractions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -73,7 +73,7 @@ namespace MarsOffice.Qeeps.Forms
                 await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
 #endif
 
-                var principal = QeepsPrincipal.Parse(req);
+                var principal = MarsOfficePrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
 
                 // validate role
@@ -174,7 +174,7 @@ namespace MarsOffice.Qeeps.Forms
                 await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
 #endif
 
-                var principal = QeepsPrincipal.Parse(req);
+                var principal = MarsOfficePrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
 
 
@@ -284,7 +284,7 @@ namespace MarsOffice.Qeeps.Forms
                 await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
 #endif
 
-                var principal = QeepsPrincipal.Parse(req);
+                var principal = MarsOfficePrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
 
                 int? page = null;
@@ -437,7 +437,7 @@ namespace MarsOffice.Qeeps.Forms
                 await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
 #endif
 
-                var principal = QeepsPrincipal.Parse(req);
+                var principal = MarsOfficePrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
 
                 using var accessClient = _httpClientFactory.CreateClient("access");
@@ -510,7 +510,7 @@ namespace MarsOffice.Qeeps.Forms
                 await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
 #endif
 
-                var principal = QeepsPrincipal.Parse(req);
+                var principal = MarsOfficePrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
                 var formId = req.RouteValues["id"].ToString();
                 var formsCollectionUri = UriFactory.CreateDocumentCollectionUri("forms", "Forms");
@@ -590,7 +590,7 @@ namespace MarsOffice.Qeeps.Forms
                 await client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri("forms"), col);
 #endif
 
-                var principal = QeepsPrincipal.Parse(req);
+                var principal = MarsOfficePrincipal.Parse(req);
                 var uid = principal.FindFirst("id").Value;
 
 

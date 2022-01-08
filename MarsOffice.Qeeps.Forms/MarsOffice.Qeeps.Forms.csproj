@@ -14,7 +14,7 @@
 		<PackageReference Include="Cronos" Version="0.7.1" />
 
 		<PackageReference Include="MarsOffice.Qeeps.Access.Abstractions" Version="1.0.0-dev.141" />
-		<PackageReference Include="MarsOffice.Qeeps.Microfunction" Version="2.0.0-dev.18" />
+		<PackageReference Include="MarsOffice.Microfunction" Version="3.0.0" />
 		<PackageReference Include="MarsOffice.Qeeps.Notifications.Abstractions" Version="1.0.0-dev.60" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
