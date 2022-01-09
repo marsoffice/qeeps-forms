@@ -668,6 +668,33 @@ namespace MarsOffice.Qeeps.Forms
                     var batchSize = 100;
                     var noOfBatches = (int)Math.Ceiling(userDtos.Count * 1f / batchSize);
 
+                    // get preferences
+                    var userPreferences = new Dictionary<string, UserPreferencesDto>();
+                    for (var i = 0; i < noOfBatches; i++)
+                    {
+                        var usersSlice = userDtos.Skip(i * batchSize).Take(batchSize).ToList();
+                        var userIds = usersSlice.Select(x => x.Id).Distinct().ToList();
+                        var postContent = new StringContent(
+                            JsonConvert.SerializeObject(userIds, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() })
+                        );
+                        try
+                        {
+                            var httpResponse = await accessClient.PostAsync("/api/access/userPreferencesByUserIds", postContent);
+                            httpResponse.EnsureSuccessStatusCode();
+                            var responseString = await httpResponse.Content.ReadAsStringAsync();
+                            var userPreferencesResponse = JsonConvert.DeserializeObject<IEnumerable<UserPreferencesDto>>(responseString,
+                                new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                            foreach (var upr in userPreferencesResponse)
+                            {
+                                userPreferences[upr.Id] = upr;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            log.LogError(e, "GetUsersPreferences failed");
+                        }
+                    }
+
                     var notificationTypes = new List<NotificationType> {
                         NotificationType.InApp
                     };
@@ -693,7 +720,8 @@ namespace MarsOffice.Qeeps.Forms
                             Recipients = usersSlice.Select(u => new RecipientDto
                             {
                                 Email = u.Email,
-                                UserId = u.Id
+                                UserId = u.Id,
+                                PreferredLanguage = userPreferences.ContainsKey(u.Id) ? userPreferences[u.Id].PreferredLanguage : null
                             }).ToList()
                         });
                     }
