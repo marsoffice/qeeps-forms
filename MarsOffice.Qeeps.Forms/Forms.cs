@@ -97,8 +97,8 @@ namespace MarsOffice.Qeeps.Forms
                 if (payload.FormAccesses?.Any() == true)
                 {
                     using var accessClient = _httpClientFactory.CreateClient("access");
-                    var orgsResponse = await accessClient.GetStringAsync("/api/access/getFullOrganisationsTree/" + uid);
-                    var userOrgs = JsonConvert.DeserializeObject<IEnumerable<OrganisationDto>>(orgsResponse, new JsonSerializerSettings
+                    var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
+                    var userOrgs = JsonConvert.DeserializeObject<IEnumerable<GroupDto>>(orgsResponse, new JsonSerializerSettings
                     {
                         ContractResolver = new CamelCasePropertyNamesContractResolver()
                     });
