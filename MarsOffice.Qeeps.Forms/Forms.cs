@@ -98,7 +98,7 @@ namespace MarsOffice.Qeeps.Forms
                 {
                     using var accessClient = _httpClientFactory.CreateClient("access");
                     var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
-                    var userOrgs = JsonConvert.DeserializeObject<IEnumerable<GroupDto>>(orgsResponse, new JsonSerializerSettings
+                    var userOrgs = JsonConvert.DeserializeObject<IEnumerable<OrganisationDto>>(orgsResponse, new JsonSerializerSettings
                     {
                         ContractResolver = new CamelCasePropertyNamesContractResolver()
                     });
@@ -217,7 +217,7 @@ namespace MarsOffice.Qeeps.Forms
                 if (payload.FormAccesses?.Any() == true)
                 {
                     using var accessClient = _httpClientFactory.CreateClient("access");
-                    var orgsResponse = await accessClient.GetStringAsync("/api/access/getFullOrganisationsTree/" + uid);
+                    var orgsResponse = await accessClient.GetStringAsync("/api/access/getAccessibleOrganisations/" + uid);
                     var userOrgs = JsonConvert.DeserializeObject<IEnumerable<OrganisationDto>>(orgsResponse, new JsonSerializerSettings
                     {
                         ContractResolver = new CamelCasePropertyNamesContractResolver()
@@ -653,7 +653,7 @@ namespace MarsOffice.Qeeps.Forms
                     var userDtos = new List<UserDto>();
                     foreach (var accessEntity in entity.FormAccesses)
                     {
-                        var usersResponse = await accessClient.GetStringAsync("/api/access/getUsersByOrganisationId/" + accessEntity.OrganisationId + "?includeDetails=true");
+                        var usersResponse = await accessClient.GetStringAsync("/api/access/getUsersByOrganisationId/" + accessEntity.OrganisationId);
                         var userDtosResponse = JsonConvert.DeserializeObject<IEnumerable<UserDto>>(usersResponse, new JsonSerializerSettings
                         {
                             ContractResolver = new CamelCasePropertyNamesContractResolver()
