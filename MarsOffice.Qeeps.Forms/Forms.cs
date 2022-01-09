@@ -693,7 +693,6 @@ namespace MarsOffice.Qeeps.Forms
                             Recipients = usersSlice.Select(u => new RecipientDto
                             {
                                 Email = u.Email,
-                                PreferredLanguage = u.UserPreferences?.PreferredLanguage,
                                 UserId = u.Id
                             }).ToList()
                         });
