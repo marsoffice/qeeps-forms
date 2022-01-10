@@ -23,7 +23,9 @@ namespace MarsOffice.Qeeps.Forms
         public override void Configure(IFunctionsHostBuilder builder)
         {
             var config = builder.GetContext().Configuration;
-            builder.Services.AddAutoMapper(typeof(Startup).Assembly);
+            builder.Services.AddAutoMapper((svc, cfg) => {
+                cfg.AllowNullCollections = true;
+            }, typeof(Startup).Assembly);
             builder.Services.AddValidatorsFromAssembly(typeof(Startup).Assembly);
             builder.Services.AddMicroserviceClients(new [] {"access"}, config);
         }
